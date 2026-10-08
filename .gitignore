@@ -1,0 +1,25 @@
+# Godot generated files
+.godot/
+.import/
+
+# Godot editor / system temporary files
+*.tmp
+*.temp
+
+# Build outputs
+build/
+
+# Android / Gradle generated files
+android/.gradle/
+android/build/.gradle/
+android/build/outputs/
+android/build/intermediates/
+android/build/.cxx/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Runtime logs
+*.log

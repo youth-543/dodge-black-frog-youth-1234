@@ -1,0 +1,535 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="PackedScene" path="res://player.tscn" id="1_player"]
+[ext_resource type="PackedScene" path="res://enemy.tscn" id="2_enemy"]
+[ext_resource type="Script" path="res://main.gd" id="3_main"]
+[ext_resource type="AudioStream" path="res://sounds/start.wav" id="4_sfx_start"]
+[ext_resource type="AudioStream" path="res://sounds/spawn.wav" id="5_sfx_spawn"]
+[ext_resource type="AudioStream" path="res://sounds/hit.wav" id="6_sfx_hit"]
+[ext_resource type="AudioStream" path="res://sounds/gameover.wav" id="7_sfx_gameover"]
+[ext_resource type="AudioStream" path="res://sounds/record.wav" id="8_sfx_record"]
+[ext_resource type="Texture2D" path="res://assets/frog/frog-10.png" id="10_frog10"]
+[ext_resource type="Script" path="res://joystick.gd" id="11_joystick"]
+
+[sub_resource type="Shader" id="shader_bg"]
+code = "shader_type canvas_item;
+void fragment() {
+	vec2 uv = UV;
+	vec3 base_col = vec3(0.035, 0.045, 0.085);
+	vec3 glow_col = vec3(0.075, 0.105, 0.185);
+	float d = distance(uv, vec2(0.5, 0.42));
+	vec3 col = mix(glow_col, base_col, smoothstep(0.05, 0.75, d));
+	vec2 g = abs(fract(uv * vec2(48.0, 27.0)) - 0.5);
+	float grid = smoothstep(0.46, 0.5, max(g.x, g.y));
+	col += vec3(0.10, 0.16, 0.28) * grid * 0.18;
+	COLOR = vec4(col, 1.0);
+}"
+
+[sub_resource type="ShaderMaterial" id="mat_bg"]
+shader = SubResource("shader_bg")
+
+[sub_resource type="StyleBoxFlat" id="sb_panel"]
+bg_color = Color(0.06, 0.08, 0.13, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.9, 0.3)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0.2, 0.5, 1, 0.12)
+shadow_size = 14
+
+[sub_resource type="StyleBoxFlat" id="sb_pbtn"]
+bg_color = Color(0.07, 0.11, 0.2, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.55, 0.9, 0.55)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="sb_pbtn_hover"]
+bg_color = Color(0.1, 0.16, 0.28, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.55, 0.8, 1, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="Gradient" id="grad_base"]
+offsets = PackedFloat32Array(0, 0.88, 1)
+colors = PackedColorArray(0.55, 0.7, 1, 0.28, 0.55, 0.7, 1, 0.24, 0.55, 0.7, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="gradtex_base"]
+gradient = SubResource("grad_base")
+width = 160
+height = 160
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="Gradient" id="grad_knob"]
+offsets = PackedFloat32Array(0, 0.88, 1)
+colors = PackedColorArray(0.85, 0.92, 1, 0.6, 0.85, 0.92, 1, 0.55, 0.85, 0.92, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="gradtex_knob"]
+gradient = SubResource("grad_knob")
+width = 76
+height = 76
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[node name="Main" type="Node2D"]
+process_mode = 3
+script = ExtResource("3_main")
+[node name="Player" parent="." instance=ExtResource("1_player")]
+process_mode = 1
+position = Vector2(640, 360)
+
+[node name="SpawnTimer" type="Timer" parent="."]
+process_mode = 1
+wait_time = 1.5
+autostart = true
+
+[node name="Enemies" type="Node2D" parent="."]
+process_mode = 1
+
+[node name="Enemy" parent="Enemies" instance=ExtResource("2_enemy")]
+position = Vector2(720, 120)
+
+[node name="GameOverUI" type="CanvasLayer" parent="."]
+process_mode = 3
+visible = false
+
+[node name="Dim" type="ColorRect" parent="GameOverUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Center" type="CenterContainer" parent="GameOverUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="GameOverUI/Center"]
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="Margin" type="MarginContainer" parent="GameOverUI/Center/Panel"]
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="GameOverUI/Center/Panel/Margin"]
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 40
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="Gap1" type="Control" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 10)
+
+[node name="FinalTimeValue" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "0.0 s"
+horizontal_alignment = 1
+
+[node name="FinalTimeLabel" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "生存时间"
+horizontal_alignment = 1
+
+[node name="Gap2" type="Control" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 6)
+
+[node name="FinalScoreValue" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 32
+text = "0"
+horizontal_alignment = 1
+
+[node name="FinalScoreLabel" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "得分"
+horizontal_alignment = 1
+
+[node name="Divider" type="ColorRect" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 1)
+color = Color(1, 1, 1, 0.12)
+
+[node name="Gap3" type="Control" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 6)
+
+[node name="RecordValue" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 22
+text = "0.0 s / 0 分"
+horizontal_alignment = 1
+
+[node name="RecordLabel" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "最高纪录"
+horizontal_alignment = 1
+
+[node name="NewRecordLabel" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+visible = false
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "新纪录！"
+horizontal_alignment = 1
+
+[node name="FrogStageValue" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.75, 0.82, 0.95, 1)
+theme_override_font_sizes/font_size = 20
+text = "本局进化：1 / 9"
+horizontal_alignment = 1
+
+[node name="Gap4" type="Control" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 8)
+
+[node name="Tip" type="Label" parent="GameOverUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 14
+text = "[R] 重新开始"
+horizontal_alignment = 1
+
+[node name="Gap5" type="Control" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 8)
+
+[node name="RestartBtn" type="Button" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "再来一局"
+
+[node name="MenuBtn" type="Button" parent="GameOverUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "返回主菜单"
+
+[node name="PauseUI" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 2
+visible = false
+
+[node name="Dim" type="ColorRect" parent="PauseUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="Center" type="CenterContainer" parent="PauseUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="PauseUI/Center"]
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="Margin" type="MarginContainer" parent="PauseUI/Center/Panel"]
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="PauseUI/Center/Panel/Margin"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="PauseUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 34
+text = "游戏已暂停"
+horizontal_alignment = 1
+
+[node name="Ask" type="Label" parent="PauseUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 18
+text = "是否返回主界面？"
+horizontal_alignment = 1
+
+[node name="ContinueBtn" type="Button" parent="PauseUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "继续游戏"
+
+[node name="BackMenuBtn" type="Button" parent="PauseUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "返回主界面"
+
+[node name="VictoryUI" type="CanvasLayer" parent="."]
+process_mode = 3
+layer = 2
+visible = false
+
+[node name="Dim" type="ColorRect" parent="VictoryUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.5)
+
+[node name="GodFrog" type="TextureRect" parent="VictoryUI"]
+modulate = Color(1, 1, 1, 0.9)
+mouse_filter = 2
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -380.0
+offset_right = 380.0
+offset_bottom = 380.0
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(380, 380)
+texture = ExtResource("10_frog10")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Center" type="CenterContainer" parent="VictoryUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="PanelContainer" parent="VictoryUI/Center"]
+theme_override_styles/panel = SubResource("sb_panel")
+
+[node name="Margin" type="MarginContainer" parent="VictoryUI/Center/Panel"]
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 32
+
+[node name="VBox" type="VBoxContainer" parent="VictoryUI/Center/Panel/Margin"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="VictoryUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 36
+text = "你已经成功躲避黑蛙，飞升成神蛙！"
+horizontal_alignment = 1
+
+[node name="FinalStage" type="Label" parent="VictoryUI/Center/Panel/Margin/VBox"]
+theme_override_colors/font_color = Color(0.75, 0.82, 0.95, 1)
+theme_override_font_sizes/font_size = 20
+text = "本局进化：9 / 9"
+horizontal_alignment = 1
+
+[node name="NewRecordLabel" type="Label" parent="VictoryUI/Center/Panel/Margin/VBox"]
+visible = false
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "新纪录！"
+horizontal_alignment = 1
+
+[node name="RestartBtn" type="Button" parent="VictoryUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "再来一局"
+
+[node name="MenuBtn" type="Button" parent="VictoryUI/Center/Panel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 48)
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "返回主菜单"
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="TopLeft" type="VBoxContainer" parent="HUD"]
+offset_left = 14.0
+offset_top = 12.0
+offset_right = 220.0
+offset_bottom = 160.0
+theme_override_constants/separation = 2
+
+[node name="TimeLabel" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "TIME"
+
+[node name="TimeValue" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "0.0 s"
+
+[node name="ScoreLabel" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "SCORE"
+
+[node name="ScoreValue" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "0"
+
+[node name="BestLabel" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "BEST"
+
+[node name="BestValue" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.95, 0.97, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "0.0 s"
+
+[node name="DiffLabel" type="Label" parent="HUD/TopLeft"]
+theme_override_colors/font_color = Color(0.58, 0.66, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "难度：1"
+
+[node name="FrogLabel" type="Label" parent="HUD/TopLeft"]
+visible = false
+modulate = Color(1, 1, 1, 0)
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "FROG 01"
+
+[node name="PauseBtn" type="Button" parent="HUD"]
+anchors_preset = 2
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -112.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 56.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.85, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("sb_pbtn")
+theme_override_styles/hover = SubResource("sb_pbtn_hover")
+theme_override_styles/pressed = SubResource("sb_pbtn_hover")
+theme_override_styles/focus = SubResource("sb_pbtn_hover")
+text = "暂停"
+
+[node name="TouchUI" type="CanvasLayer" parent="."]
+
+[node name="Joystick" type="Control" parent="TouchUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("11_joystick")
+
+[node name="Base" type="TextureRect" parent="TouchUI/Joystick"]
+visible = false
+mouse_filter = 2
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 160.0
+offset_bottom = 160.0
+texture = SubResource("gradtex_base")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Knob" type="TextureRect" parent="TouchUI/Joystick"]
+visible = false
+mouse_filter = 2
+offset_left = 42.0
+offset_top = 42.0
+offset_right = 118.0
+offset_bottom = 118.0
+texture = SubResource("gradtex_knob")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Background" type="CanvasLayer" parent="."]
+layer = -1
+
+[node name="Backdrop" type="ColorRect" parent="Background"]
+material = SubResource("mat_bg")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="SFX" type="Node" parent="."]
+[node name="StartSound" type="AudioStreamPlayer" parent="SFX"]
+stream = ExtResource("4_sfx_start")
+volume_db = -6.0
+
+[node name="SpawnSound" type="AudioStreamPlayer" parent="SFX"]
+stream = ExtResource("5_sfx_spawn")
+volume_db = -8.0
+
+[node name="HitSound" type="AudioStreamPlayer" parent="SFX"]
+stream = ExtResource("6_sfx_hit")
+volume_db = -3.0
+
+[node name="GameOverSound" type="AudioStreamPlayer" parent="SFX"]
+stream = ExtResource("7_sfx_gameover")
+volume_db = -6.0
+
+[node name="RecordSound" type="AudioStreamPlayer" parent="SFX"]
+stream = ExtResource("8_sfx_record")
+volume_db = -4.0
+
+[node name="GrowthSound" type="AudioStreamPlayer" parent="SFX"]
+volume_db = -6.0
+
+[node name="BGM" type="AudioStreamPlayer" parent="."]

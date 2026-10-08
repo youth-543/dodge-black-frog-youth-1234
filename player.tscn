@@ -1,0 +1,59 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://player.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/frog/frog-01.jpg" id="2_frog"]
+
+[sub_resource type="Gradient" id="Gradient_glow"]
+offsets = PackedFloat32Array(0, 0.5, 1)
+colors = PackedColorArray(1, 1, 1, 0.45, 1, 1, 1, 0.16, 1, 1, 1, 0)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_glow"]
+gradient = SubResource("Gradient_glow")
+width = 128
+height = 128
+fill = 1
+fill_from = Vector2(0.5, 0.5)
+fill_to = Vector2(0.5, 0)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_body"]
+radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_hurt"]
+radius = 22.0
+
+[node name="Player" type="CharacterBody2D" groups=["player"]]
+script = ExtResource("1_script")
+
+[node name="Glow" type="Sprite2D" parent="."]
+modulate = Color(0.35, 0.6, 1, 0.9)
+scale = Vector2(0.55, 0.55)
+texture = SubResource("GradientTexture2D_glow")
+
+[node name="Body" type="Sprite2D" parent="."]
+scale = Vector2(0.16, 0.16)
+texture = ExtResource("2_frog")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_body")
+
+[node name="HurtBox" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HurtBox"]
+shape = SubResource("CircleShape2D_hurt")
+
+[node name="DeathBurst" type="CPUParticles2D" parent="."]
+process_mode = 3
+emitting = false
+amount = 14
+lifetime = 0.5
+one_shot = true
+explosiveness = 1.0
+spread = 180.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 60.0
+initial_velocity_max = 160.0
+scale_amount_min = 2.0
+scale_amount_max = 3.5
+color = Color(0.7, 0.85, 1, 0.9)

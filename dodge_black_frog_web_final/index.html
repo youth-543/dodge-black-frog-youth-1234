@@ -89,7 +89,47 @@ body {
 	text-align: center;
 	z-index: 1;
 }
-		</style>
+		#orientation-warning {
+    display: none;
+}
+
+@media screen and (max-width: 900px) and (orientation: portrait) {
+    #canvas {
+        display: none;
+    }
+
+    #orientation-warning {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        text-align: center;
+    }
+
+    .orientation-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+        transform: rotate(90deg);
+    }
+
+    .orientation-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .orientation-text {
+        font-size: 16px;
+        color: #aaa;
+    }
+}
+</style>
 		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
 <link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 
@@ -112,18 +152,23 @@ body {
 
 #canvas {
     display: block;
-    width: 100vw;
-    height: 56.25vw;
+    width: 100%;
+    height: 100%;
     max-width: 100vw;
     max-height: 100vh;
-    aspect-ratio: 16 / 9;
     object-fit: contain;
 }
 </style>
 
 </head>
 	<body>
-		<canvas id="canvas">
+		<div id="orientation-warning">
+        <div class="orientation-icon">↻</div>
+        <div class="orientation-title">请将手机横屏</div>
+        <div class="orientation-text">横屏后即可开始游戏</div>
+</div>
+
+<canvas id="canvas">
 			Your browser does not support the canvas tag.
 		</canvas>
 
@@ -245,5 +290,8 @@ const engine = new Engine(GODOT_CONFIG);
 		</script>
 	</body>
 </html>
+
+
+
 
 

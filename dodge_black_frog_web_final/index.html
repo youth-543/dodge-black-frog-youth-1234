@@ -357,8 +357,12 @@ html.touch-shell #canvas {
 	var TIP_DEFAULT = '横屏体验更佳，竖屏也可直接玩';
 	var DISMISS_KEY = 'dbf_ori_tip_closed';
 	var forceHint = false;  /* 横屏尝试失败后临时强制展示引导；横屏或手动关闭后清除 */
+	/* 关闭状态只保留在当前页面会话（sessionStorage）：刷新当前标签仍生效，
+	 * 但用户重新打开链接/新开页面时提示条会再次出现，横屏入口永不丢失。
+	 * 同时清掉旧版本写在 localStorage 里的永久关闭标记 */
+	try { localStorage.removeItem(DISMISS_KEY); } catch (e) {}
 	function tipDismissed() {
-		try { return localStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
+		try { return sessionStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; }
 	}
 	function refreshTip() {
 		if (!tip) { return; }
@@ -375,7 +379,7 @@ html.touch-shell #canvas {
 			forceHint = false;
 			tip.classList.remove('guide');
 			if (tipText) { tipText.textContent = TIP_DEFAULT; }
-			try { localStorage.setItem(DISMISS_KEY, '1'); } catch (e) {}
+			try { sessionStorage.setItem(DISMISS_KEY, '1'); } catch (e) {}
 			refreshTip();
 		});
 	}
